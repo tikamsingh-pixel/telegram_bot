@@ -218,48 +218,45 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(TEXT[customer["language"]]["mobile"], reply_markup=contact_keyboard())
         return
 
-    # MAIN MENU ACTIONS
-    if text == "🛒 Shop With Us":
-        await update.message.reply_text("🛒 Shop With Us 😊", reply_markup=shop_menu())
-        return
-
-    elif text == "📞 Contact Us":
-        await update.message.reply_text(t["contact_us"], reply_markup=main_menu())
-        return
-
-    elif text == "🌐 Visit Website":
-        await update.message.reply_text(f"Visit us here: {WEBSITE_URL}", reply_markup=main_menu())
-        return
-
-    elif text == "🛠 Support":
-        customer["state"] = "support_request"
-        save_data()
-        await update.message.reply_text(t["support"], reply_markup=cancel_keyboard())
-        return
-
-      
-    elif customer["state"] == "support_request":
-        # Forward support request to support chat
-        await context.bot.send_message(
-            SUPPORT_CHAT_ID,
-            f"🛠 Support Request\n\nName: {customer['name']}\nMobile: {customer['mobile']}\nIssue: {text}"
-        )
-        customer["state"] = None
-        save_data()
-        await update.message.reply_text(t["support_done"], reply_markup=main_menu())
-        return
-
-    elif "Buy Products Online" in text:
-
-        await update.message.reply_text(
-            f"Browse products here 👇\n{PRODUCT_PAGE}",
-            reply_markup=main_menu()
-        )
+# MAIN MENU ACTIONS
+if text == "🛒 Shop With Us":
+    await update.message.reply_text("🛒 Shop With Us 😊", reply_markup=shop_menu())
     return
 
-    elif text == "🔙 Back to Main Menu":
-        await update.message.reply_text(t["assist"], reply_markup=main_menu())
-        return
+elif text == "📞 Contact Us":
+    await update.message.reply_text(t["contact_us"], reply_markup=main_menu())
+    return
+
+elif text == "🌐 Visit Website":
+    await update.message.reply_text(f"Visit us here: {WEBSITE_URL}", reply_markup=main_menu())
+    return
+
+elif text == "🛠 Support":
+    customer["state"] = "support_request"
+    save_data()
+    await update.message.reply_text(t["support"], reply_markup=cancel_keyboard())
+    return
+
+elif customer["state"] == "support_request":
+    await context.bot.send_message(
+        SUPPORT_CHAT_ID,
+        f"🛠 Support Request\n\nName: {customer['name']}\nMobile: {customer['mobile']}\nIssue: {text}"
+    )
+    customer["state"] = None
+    save_data()
+    await update.message.reply_text(t["support_done"], reply_markup=main_menu())
+    return
+
+elif "Buy Products Online" in text:
+    await update.message.reply_text(
+        f"Browse products here 👇\n{PRODUCT_PAGE}",
+        reply_markup=main_menu()
+    )
+    return   # ✅ MUST BE INDENTED
+
+elif text == "🔙 Back to Main Menu":
+    await update.message.reply_text(t["assist"], reply_markup=main_menu())
+    return
 
 
     # DEALER
@@ -378,4 +375,3 @@ if __name__ == "__main__":
     
     logger.info("Bot is running...")
     app.run_polling()
-
