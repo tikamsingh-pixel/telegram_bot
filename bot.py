@@ -249,11 +249,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(t["support_done"], reply_markup=main_menu())
         return
 
-    elif text == "🛒 Buy Products Online":
+    elif "Buy Products Online" in text:
 
-    await update.message.reply_text(
-        f"🛒 Browse & buy online:\n{PRODUCT_PAGE}"
-    )
+        await update.message.reply_text(
+            f"Browse products here 👇\n{PRODUCT_PAGE}",
+            reply_markup=main_menu()
+        )
+    return
 
     elif text == "🔙 Back to Main Menu":
         await update.message.reply_text(t["assist"], reply_markup=main_menu())
@@ -376,3 +378,4 @@ if __name__ == "__main__":
     
     logger.info("Bot is running...")
     app.run_polling()
+
