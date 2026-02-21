@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # 🔐 CONFIGURATION
 # =========================
 # Set these in your environment variables, or replace the second argument with your strings for testing
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "Y8270157033:AAERc9UPafWRCBDSk7mw6Uiqhb00WjcB_Qo")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8270157033:AAERc9UPafWRCBDSk7mw6Uiqhb00WjcB_Qo")
 SALES_CHAT_ID = os.environ.get("SALES_CHAT_ID", "-1003615161480")
 SUPPORT_CHAT_ID = os.environ.get("SUPPORT_CHAT_ID", "-1003658502551")
 
@@ -342,4 +342,5 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_message))
     
     logger.info("Bot is running...")
+
     app.run_polling()
