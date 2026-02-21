@@ -130,6 +130,10 @@ def testimonial_menu():
 def rating_keyboard():
     return ReplyKeyboardMarkup([["⭐ 1", "⭐ 2", "⭐ 3", "⭐ 4", "⭐ 5"]], resize_keyboard=True)
 
+def location_keyboard():
+    return ReplyKeyboardMarkup([[KeyboardButton("📍 Share Location", request_location=True)]], resize_keyboard=True)
+
+
 def cancel_keyboard():
     return ReplyKeyboardMarkup([["❌ Cancel"]], resize_keyboard=True)
 
@@ -232,7 +236,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_data()
         await update.message.reply_text(t["support"], reply_markup=cancel_keyboard())
         return
-        
+
+      
     elif customer["state"] == "support_request":
         # Forward support request to support chat
         await context.bot.send_message(
@@ -244,8 +249,36 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(t["support_done"], reply_markup=main_menu())
         return
 
+    elif text == "🛒 Buy Products Online":
+
+    await update.message.reply_text(
+        f"🛒 Browse & buy online:\n{PRODUCT_PAGE}"
+    )
+
     elif text == "🔙 Back to Main Menu":
         await update.message.reply_text(t["assist"], reply_markup=main_menu())
+        return
+
+
+    # DEALER
+    elif text == "📍 Find Nearest Dealer":
+        await update.message.reply_text("Share your location 📍", reply_markup=location_keyboard())
+        return
+
+    elif update.message.location:
+        user_lat = update.message.location.latitude
+        user_lon = update.message.location.longitude
+
+        nearest = min(DEALERS, key=lambda d: calculate_distance(user_lat, user_lon, d["lat"], d["lon"]))
+
+        await update.message.reply_text(
+            f"""📍 Nearest Dealer
+
+        {nearest['name']}
+        Phone: {nearest['phone']}
+        """
+        )
+        await update.message.reply_text(TEXT[lang]["assist"], reply_markup=main_menu())
         return
 
     # TESTIMONIAL ENTRY
@@ -342,5 +375,4 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_message))
     
     logger.info("Bot is running...")
-
     app.run_polling()
