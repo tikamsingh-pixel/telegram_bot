@@ -354,15 +354,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # =========================
     # 🛒 SHOP & SALES INQUIRIES
     # =========================
-    elif "Shop With Us" in text:
+    if "Shop With Us" in text:
         await update.message.reply_text("Please choose a category 😊", reply_markup=shop_menu())
         return
 
-    elif "Back" in text:
+    if "Back" in text:
         await update.message.reply_text(t["assist"], reply_markup=main_menu())
         return
 
-    elif "Inquiry" in text:
+    if "Inquiry" in text:
         # This catches Household, Wholesale, and Restaurant inquiries
         await context.bot.send_message(
             SALES_CHAT_ID,
@@ -377,7 +377,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    elif "Buy Products Online" in text:
+    if "Buy Products Online" in text:
         # Professional link presentation
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("🛒 Browse Online Store", url=PRODUCT_PAGE)]
@@ -391,7 +391,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # =========================
     # 🛠️ SUPPORT SYSTEM
     # =========================
-    elif text == "🛠 Support":
+    if text == "🛠 Support":
         customer["state"] = "support"
         save_data()
         # Using t["support"] from your dictionary (e.g., "Please describe your issue")
@@ -402,7 +402,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    elif customer["state"] == "support":
+    if customer["state"] == "support":
         # Check if the user sent text. If they sent a photo/file, you can still forward it!
         content = text if text else "[User sent media/non-text message]"
         
@@ -430,7 +430,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # =========================
     # 📍 DEALER LOCATOR
     # =========================
-    elif text == "📍 Find Nearest Dealer":
+    if text == "📍 Find Nearest Dealer":
         # We use a specialized keyboard that asks for GPS coordinates
         await update.message.reply_text(
             "To find the nearest dealer, please share your location 📍", 
@@ -438,7 +438,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    elif update.message.location:
+    if update.message.location:
         lat, lon = update.message.location.latitude, update.message.location.longitude
         
         # Find nearest dealer
@@ -463,71 +463,87 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-   # =========================
+    # =========================
     # ⭐ TESTIMONIAL HANDLING
     # =========================
-    elif text and "⭐ Share Testimonial" in text:
-        customer["state"] = "testimonial"
+    if text == "⭐ Share Testimonial":
+        customer["state"] = "testimonial_menu"
         save_data()
         await update.message.reply_text(t["testimonial"], reply_markup=testimonial_menu())
         return
 
     # --- VIDEO TESTIMONIAL ---
-    elif text == "🎥 Record Video":
-        customer["state"] = "video"
+    if text == "🎥 Record Video":
+        customer["state"] = "video_waiting"
         save_data()
         await update.message.reply_text("🎥 Please record or upload your video testimonial 😊", reply_markup=cancel_keyboard())
         return
 
-    elif customer["state"] == "video_testimonial":
+    if customer["state"] == "video_waiting":
         # Check if the user actually sent a video
         if update.message.video:
             customer["video_id"] = update.message.video.file_id
-            customer["state"] = "rating"
+            customer["state"] = "video_rating"
             save_data()
 
             await update.message.reply_text(t["rating"], reply_markup=rating_keyboard())
             return
+        
         else: 
             # This 'else' is correctly aligned now to catch non-video messages during this state
-            await update.message.reply_text("Please upload a valid video file 🎥, or press Cancel.") 
+            await update.message.reply_text("Please upload a valid video file 🎥, or press ❌ Cancel.") 
             return
     
-    elif customer["state"] == "rating": 
+    if customer.get ("state") == "video_rating": 
         # Safely extract rating, default to 0 if text is somehow empty
-        rating = text.replace("⭐", "").strip() if text else "0"
-        
+        rating = text.replace("⭐", "").strip()
+
+        if rating not in ["1", "2", "3", "4", "5"]:
+            await update.message.reply_text(
+            "Please select a rating from 1–5 ⭐",
+            reply_markup=rating_keyboard()
+        )
+        return
+    
         # Forward the video to the sales team
         await context.bot.send_video( 
             SALES_CHAT_ID, 
             customer["video_id"], 
-            caption=f"🎥 Video Testimonial\n\nName: {customer['name']}\nMobile: {customer['mobile']}\nRating: {rating}/5 ⭐" 
+            caption=(f"🎥 Video Testimonial\n\nName: {customer['name']}\nMobile: {customer['mobile']}\nRating: {rating}/5 ⭐") 
         ) 
         
         # Reset state
-        customer["state"] = None 
+        customer["state"] = None
+        customer.pop("video_id", None) 
         save_data() 
         
-        await update.message.reply_text("✨ Thank you for your feedback 😊") 
-        await update.message.reply_text(t["assist"], reply_markup=main_menu()) 
+        await update.message.reply_text("✨ Thank you for your feedback 😊" , reply_markup=main_menu()) 
         return
     
     # --- TEXT TESTIMONIAL ---
-    elif text == "📝 Write Testimonial":
-        customer["state"] = "text_testimonial"
+    if text == "📝 Write Testimonial":
+        customer["state"] = "text_waiting"
         save_data()
-        await update.message.reply_text("Write your feedback 😊", reply_markup=cancel_keyboard())
+        await update.message.reply_text("📝 Please write your testimonial 😊", reply_markup=cancel_keyboard())
         return
 
-    elif customer["state"] == "text_testimonial":
+    if customer["state"] == "text_waiting":
         customer["testimonial"] = text
-        customer["state"] = "rating"
+        customer["state"] = "text_rating"
         save_data()
+
         await update.message.reply_text(t["rating"], reply_markup=rating_keyboard())
         return
 
-    elif customer["state"] == "rating":
-        rating = text.replace("⭐", "").strip() if text else "0"
+    if customer.get("state") == "text_rating":
+        rating = text.replace("⭐", "").strip()
+        
+        if rating not in ["1", "2", "3", "4", "5"]:
+            await update.message.reply_text(
+            "Please select a rating from 1–5 ⭐",
+            reply_markup=rating_keyboard()
+        )
+        return
         
         # Forward the text to the sales team
         await context.bot.send_message(
@@ -536,11 +552,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Reset state
-        customer["state"] = None
+        customer("state") = None
+        customer.pop("testimonial", None)
         save_data()
         
-        await update.message.reply_text("Thank you 😊")
-        await update.message.reply_text(t["assist"], reply_markup=main_menu())
+        await update.message.reply_text("✨ Thank you for your feedback 😊", reply_markup=main_menu()
+        )
         return
 
     # ℹ️ UTILITY & NAVIGATION
