@@ -552,7 +552,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Reset state
-        customer("state") = None
+        customer["state"] = None
         customer.pop("testimonial", None)
         save_data()
         
