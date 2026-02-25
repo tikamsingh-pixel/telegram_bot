@@ -486,7 +486,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             customer["state"] = "video_rating"
             save_data()
 
-            await update.message.reply_text(t["video_rating"], reply_markup=rating_keyboard())
+            await update.message.reply_text(t["rating"], reply_markup=rating_keyboard())
             return
         
         else: 
@@ -539,7 +539,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         customer["state"] = "text_rating"
         save_data()
 
-        await update.message.reply_text(t["text_rating"], reply_markup=rating_keyboard())
+        await update.message.reply_text(t["rating"], reply_markup=rating_keyboard())
         return
 
     if customer.get("state") == "text_rating":
@@ -617,3 +617,4 @@ if __name__ == "__main__":
     logger.info("Bot is running...")
 
     app.run_polling()
+
