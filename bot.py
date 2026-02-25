@@ -496,7 +496,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if customer.get ("state") == "video_rating": 
         # Safely extract rating, default to 0 if text is somehow empty
-        rating = text.replace("⭐", "").strip()
+        rating = "".join(filter(str.isdigit, text))
 
         if rating not in ["1", "2", "3", "4", "5"]:
             await update.message.reply_text(
@@ -506,11 +506,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
         # Forward the video to the sales team
-        await context.bot.send_video( 
-            SALES_CHAT_ID, 
-            customer["video_id"], 
-            caption=(f"🎥 Video Testimonial\n\nName: {customer['name']}\nMobile: {customer['mobile']}\nRating: {rating}/5 ⭐") 
-        ) 
+    try:
+        await context.bot.send_message(
+            SALES_CHAT_ID,
+            f"⭐ TESTIMONIAL\n\n"
+            f"Name: {customer['name']}\n"
+            f"Mobile: {customer['mobile']}\n"
+            f"Rating: {rating}/5 ⭐\n\n"
+            f"Feedback:\n{customer['testimonial']}"
+        )
+    except Exception as e:
+        print("Sales forward error:", e)
+
         
         # Reset state
         customer["state"] = None
@@ -536,7 +543,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if customer.get("state") == "text_rating":
-        rating = text.replace("⭐", "").strip()
+        rating = "".join(filter(str.isdigit, text))
         
         if rating not in ["1", "2", "3", "4", "5"]:
             await update.message.reply_text(
@@ -546,10 +553,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
         
         # Forward the text to the sales team
+    try:
         await context.bot.send_message(
             SALES_CHAT_ID,
-            f"⭐ TESTIMONIAL\n\nName: {customer['name']}\nMobile: {customer['mobile']}\nRating: {rating}/5 ⭐\n\nFeedback:\n{customer['testimonial']}"
+            f"⭐ TESTIMONIAL\n\n"
+            f"Name: {customer['name']}\n"
+            f"Mobile: {customer['mobile']}\n"
+            f"Rating: {rating}/5 ⭐\n\n"
+            f"Feedback:\n{customer['testimonial']}"
         )
+
+    except Exception as e:
+        print("Sales forward error:", e)
         
         # Reset state
         customer["state"] = None
@@ -562,23 +577,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ℹ️ UTILITY & NAVIGATION
 
-    elif "Contact Us" in text:
+    if "Contact Us" in text:
         await update.message.reply_text(t["contact_us"], reply_markup=main_menu())
         return
 
-    elif "Visit Website" in text:
+    if "Visit Website" in text:
         # It's often better to send a message WITH the link rather than just the URL
         await update.message.reply_text(f"🌐 Visit our official website: {WEBSITE_URL}", reply_markup=main_menu())
         return
 
-    elif "Change Language" in text:
+    if "Change Language" in text:
         customer["language"] = None
         customer["state"] = "lang"
         save_data()
         await update.message.reply_text(TEXT["EN"]["choose_lang"], reply_markup=language_menu())
         return
 
-    elif "End Chat" in text:
+    if "End Chat" in text:
         # Clear the user's state so they can start fresh next time
         customer["state"] = None
         save_data()
